@@ -15,12 +15,13 @@ class AuthorController extends Controller
     public function index()
     {
         $authors = Author::withCount('books')->orderBy('name')->paginate(20);
+
         return view('authors.index', compact('authors'));
     }
 
     public function create()
     {
-        return view('authors.create');
+        return view('authors.index'); // show index with create form
     }
 
     public function store(Request $request)
@@ -38,12 +39,13 @@ class AuthorController extends Controller
     public function show(Author $author)
     {
         $author->load('books');
-        return view('authors.show', compact('author'));
+
+        return view('authors.index', compact('author'));
     }
 
     public function edit(Author $author)
     {
-        return view('authors.edit', compact('author'));
+        return view('authors.index', compact('author'));
     }
 
     public function update(Request $request, Author $author)
@@ -55,7 +57,7 @@ class AuthorController extends Controller
 
         $author->update($data);
 
-        return redirect()->route('authors.show', $author)->with('success', 'Author updated.');
+        return redirect()->route('authors.index')->with('success', 'Author updated.');
     }
 
     public function destroy(Author $author)

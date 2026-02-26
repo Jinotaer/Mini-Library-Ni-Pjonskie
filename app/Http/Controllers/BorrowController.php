@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\BorrowTransaction;
-use App\Models\BorrowItem;
+use App\Http\Requests\StoreBorrowRequest;
+use App\Http\Requests\UpdateBorrowRequest;
 use App\Models\Book;
+use App\Models\BorrowItem;
+use App\Models\BorrowTransaction;
 use App\Models\Student;
+use Carbon\Carbon;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class BorrowController extends Controller
 {
@@ -17,29 +21,27 @@ class BorrowController extends Controller
         $this->middleware('auth'); // staff only
     }
 
-    public function index()
+    public function index(): View
     {
-        $transactions = BorrowTransaction::with('student')->latest()->paginate(15);
-        return view('borrows.index', compact('transactions'));
+        return view('borrows.index', [
+            'borrows' => BorrowTransaction::with(['student', 'items.book'])->latest()->paginate(15),
+            'books' => Book::orderBy('title')->get(),
+            'availableBooks' => Book::where('available_copies', '>', 0)->orderBy('title')->get(),
+            'students' => Student::orderBy('last_name')->get(),
+        ]);
     }
 
-    public function create()
+    public function create(): View
     {
         $books = Book::where('available_copies', '>', 0)->orderBy('title')->get();
         $students = Student::orderBy('last_name')->get();
-        return view('borrows.create', compact('books','students'));
+
+        return view('borrows.create', compact('books', 'students'));
     }
 
-    public function store(Request $request)
+    public function store(StoreBorrowRequest $request): RedirectResponse
     {
-        $data = $request->validate([
-            'student_id' => 'required|exists:students,id',
-            'borrow_date' => 'required|date',
-            'due_date' => 'required|date|after_or_equal:borrow_date',
-            'books' => 'required|array|min:1',
-            'books.*.book_id' => 'required|exists:books,id',
-            'books.*.quantity' => 'required|integer|min:1',
-        ]);
+        $data = $request->validated();
 
         DB::transaction(function () use ($data) {
             $transaction = BorrowTransaction::create([
@@ -52,11 +54,11 @@ class BorrowController extends Controller
 
             foreach ($data['books'] as $line) {
                 $book = Book::findOrFail($line['book_id']);
-                $qty = (int)$line['quantity'];
+                $qty = (int) $line['quantity'];
 
                 if ($book->available_copies < $qty) {
                     throw \Illuminate\Validation\ValidationException::withMessages([
-                        'books' => "Not enough copies available for book: {$book->title}"
+                        'books' => "Not enough copies available for book: {$book->title}",
                     ]);
                 }
 
@@ -77,34 +79,76 @@ class BorrowController extends Controller
         return redirect()->route('borrows.index')->with('success', 'Borrow transaction recorded.');
     }
 
-    public function show(BorrowTransaction $borrow)
+    public function show(BorrowTransaction $borrow): View
     {
-        $borrow->load('student','items.book');
-        return view('borrows.show', ['borrowTransaction' => $borrow]);
+        $borrow->load('student', 'items.book');
+
+        return view('borrows.index', ['borrowTransaction' => $borrow]);
     }
 
-    public function edit(BorrowTransaction $borrow)
+    public function edit(BorrowTransaction $borrow): View
     {
         // editing borrow transaction (limited) - optional
-        $borrow->load('items.book','student');
-        return view('borrows.edit', compact('borrow'));
+        $borrow->load('items.book', 'student');
+
+        return view('borrows.index', compact('borrow'));
     }
 
-    public function update(Request $request, BorrowTransaction $borrow)
+    public function update(UpdateBorrowRequest $request, BorrowTransaction $borrow): RedirectResponse
     {
-        // Typically you don't allow changing core borrow items easily; implement if needed
-        $data = $request->validate([
-            'due_date' => 'required|date|after_or_equal:borrow_date',
-        ]);
+        $data = $request->validated();
 
-        $borrow->update([
-            'due_date' => $data['due_date'],
-        ]);
+        $hasReturns = $borrow->items()->where('returned_quantity', '>', 0)->exists();
+        if ($hasReturns) {
+            return redirect()->back()->withErrors(['error' => 'Cannot edit a borrow with returned items.']);
+        }
 
-        return redirect()->route('borrows.show', $borrow)->with('success', 'Borrow updated.');
+        DB::transaction(function () use ($borrow, $data) {
+            $borrow->load('items.book');
+
+            foreach ($borrow->items as $item) {
+                $book = $item->book;
+                if ($book) {
+                    $book->available_copies += $item->quantity;
+                    $book->save();
+                }
+            }
+
+            $borrow->items()->delete();
+
+            $borrow->update([
+                'borrow_date' => $data['borrow_date'],
+                'due_date' => $data['due_date'],
+                'total_fine' => 0,
+            ]);
+
+            foreach ($data['books'] as $line) {
+                $book = Book::findOrFail($line['book_id']);
+                $qty = (int) $line['quantity'];
+
+                if ($book->available_copies < $qty) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'books' => "Not enough copies available for book: {$book->title}",
+                    ]);
+                }
+
+                $book->available_copies -= $qty;
+                $book->save();
+
+                BorrowItem::create([
+                    'borrow_id' => $borrow->id,
+                    'book_id' => $book->id,
+                    'quantity' => $qty,
+                    'returned_quantity' => 0,
+                    'fine' => 0,
+                ]);
+            }
+        });
+
+        return redirect()->route('borrows.index')->with('success', 'Borrow updated.');
     }
 
-    public function destroy(BorrowTransaction $borrow)
+    public function destroy(BorrowTransaction $borrow): RedirectResponse
     {
         // Cancel transaction only if nothing returned and you want to roll back copies
         $hasReturns = $borrow->items()->where('returned_quantity', '>', 0)->exists();
@@ -133,13 +177,13 @@ class BorrowController extends Controller
      *
      * Request: return_quantity (int), borrow_item_id (optional if passed in URL)
      */
-    public function returnItem(Request $request, $borrowItemId)
+    public function returnItem(Request $request, $borrowItemId): RedirectResponse
     {
         $data = $request->validate([
             'return_quantity' => 'required|integer|min:1',
         ]);
 
-        $returnQty = (int)$data['return_quantity'];
+        $returnQty = (int) $data['return_quantity'];
 
         $item = BorrowItem::findOrFail($borrowItemId);
         $transaction = $item->transaction;
@@ -154,7 +198,7 @@ class BorrowController extends Controller
             $returnDate = Carbon::now();
             $dueDate = Carbon::parse($transaction->due_date);
             $overdueDays = $returnDate->greaterThan($dueDate) ? $returnDate->diffInDays($dueDate) : 0;
-            $partialFine = 10 * $overdueDays * $returnQty;
+            $partialFine = BorrowTransaction::FINE_PER_DAY * $overdueDays * $returnQty;
 
             $item->returned_quantity += $returnQty;
             $item->last_returned_at = $returnDate;
@@ -180,5 +224,43 @@ class BorrowController extends Controller
         });
 
         return redirect()->back()->with('success', 'Return processed.');
+    }
+
+    public function returnAll(BorrowTransaction $borrow): RedirectResponse
+    {
+        $borrow->load('items.book');
+
+        $returnDate = Carbon::now();
+        $dueDate = Carbon::parse($borrow->due_date);
+        $overdueDays = $returnDate->greaterThan($dueDate) ? $returnDate->diffInDays($dueDate) : 0;
+
+        DB::transaction(function () use ($borrow, $returnDate, $overdueDays) {
+            foreach ($borrow->items as $item) {
+                $remaining = $item->quantity - $item->returned_quantity;
+                if ($remaining <= 0) {
+                    continue;
+                }
+
+                $partialFine = BorrowTransaction::FINE_PER_DAY * $overdueDays * $remaining;
+
+                $item->returned_quantity += $remaining;
+                $item->last_returned_at = $returnDate;
+                $item->fine += $partialFine;
+                $item->save();
+
+                $book = $item->book;
+                if ($book) {
+                    $book->available_copies += $remaining;
+                    $book->save();
+                }
+            }
+
+            $borrow->recomputeTotalFine();
+
+            $borrow->returned_at = $returnDate;
+            $borrow->save();
+        });
+
+        return redirect()->back()->with('success', 'All items returned.');
     }
 }

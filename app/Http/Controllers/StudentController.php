@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Student;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class StudentController extends Controller
@@ -12,18 +14,19 @@ class StudentController extends Controller
         $this->middleware('auth'); // only staff manage students
     }
 
-    public function index()
+    public function index(): View
     {
         $students = Student::withCount('borrowTransactions')->latest()->paginate(20);
+
         return view('students.index', compact('students'));
     }
 
-    public function create()
+    public function create(): RedirectResponse
     {
-        return view('students.create');
+        return redirect()->route('students.index');
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'student_number' => 'required|string|max:50|unique:students,student_number',
@@ -39,21 +42,20 @@ class StudentController extends Controller
         return redirect()->route('students.index')->with('success', 'Student added.');
     }
 
-    public function show(Student $student)
+    public function show(Student $student): RedirectResponse
     {
-        $student->load('borrowTransactions.items.book');
-        return view('students.show', compact('student'));
+        return redirect()->route('students.index');
     }
 
-    public function edit(Student $student)
+    public function edit(Student $student): RedirectResponse
     {
-        return view('students.edit', compact('student'));
+        return redirect()->route('students.index');
     }
 
-    public function update(Request $request, Student $student)
+    public function update(Request $request, Student $student): RedirectResponse
     {
         $data = $request->validate([
-            'student_number' => 'required|string|max:50|unique:students,student_number,' . $student->id,
+            'student_number' => 'required|string|max:50|unique:students,student_number,'.$student->id,
             'first_name' => 'required|string|max:100',
             'last_name' => 'required|string|max:100',
             'course' => 'nullable|string|max:100',
@@ -63,10 +65,10 @@ class StudentController extends Controller
 
         $student->update($data);
 
-        return redirect()->route('students.show', $student)->with('success', 'Student updated.');
+        return redirect()->route('students.index')->with('success', 'Student updated.');
     }
 
-    public function destroy(Student $student)
+    public function destroy(Student $student): RedirectResponse
     {
         // optional: prevent if student has outstanding borrowed items
         $outstanding = $student->borrowTransactions()

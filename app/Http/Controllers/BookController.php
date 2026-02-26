@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Book;
 use App\Models\Author;
+use App\Models\Book;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class BookController extends Controller
 {
@@ -15,27 +17,29 @@ class BookController extends Controller
         $this->middleware('auth'); // require login (Breeze)
     }
 
-    public function index()
+    public function index(): View
     {
         $books = Book::with('authors')->latest()->paginate(15);
-        return view('books.index', compact('books'));
+        $authors = Author::orderBy('name')->get();
+
+        return view('books.index', compact('books', 'authors'));
     }
 
-    public function create()
+    public function create(): View
     {
         $authors = Author::orderBy('name')->get();
-        return view('books.create', compact('authors'));
+
+        return view('books.index', compact('authors'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'title' => 'required|string|max:255',
             'isbn' => 'nullable|string|max:100|unique:books,isbn',
-            'publisher' => 'nullable|string|max:255',
+            'author' => 'nullable|string|max:255',
             'total_copies' => 'required|integer|min:1',
             'year_published' => 'nullable|digits:4|integer',
-            'description' => 'nullable|string',
             'authors' => 'nullable|array',
             'authors.*' => 'exists:authors,id',
         ]);
@@ -44,15 +48,14 @@ class BookController extends Controller
             $book = Book::create([
                 'title' => $data['title'],
                 'isbn' => $data['isbn'] ?? null,
-                'publisher' => $data['publisher'] ?? null,
+                'author' => $data['author   '] ?? null,
                 'total_copies' => $data['total_copies'],
                 // at creation available == total
                 'available_copies' => $data['total_copies'],
                 'year_published' => $data['year_published'] ?? null,
-                'description' => $data['description'] ?? null,
             ]);
 
-            if (!empty($data['authors'])) {
+            if (! empty($data['authors'])) {
                 $book->authors()->sync($data['authors']);
             }
         });
@@ -60,28 +63,29 @@ class BookController extends Controller
         return redirect()->route('books.index')->with('success', 'Book created.');
     }
 
-    public function show(Book $book)
+    public function show(Book $book): View
     {
         $book->load('authors');
-        return view('books.show', compact('book'));
+
+        return view('books.index', compact('book'));
     }
 
-    public function edit(Book $book)
+    public function edit(Book $book): View
     {
         $authors = Author::orderBy('name')->get();
         $book->load('authors');
-        return view('books.edit', compact('book', 'authors'));
+
+        return view('books.index', compact('book', 'authors'));
     }
 
-    public function update(Request $request, Book $book)
+    public function update(Request $request, Book $book): RedirectResponse
     {
         $data = $request->validate([
             'title' => 'required|string|max:255',
-            'isbn' => ['nullable','string','max:100', Rule::unique('books','isbn')->ignore($book->id)],
-            'publisher' => 'nullable|string|max:255',
+            'isbn' => ['nullable', 'string', 'max:100', Rule::unique('books', 'isbn')->ignore($book->id)],
+            'author' => 'nullable|string|max:255',
             'total_copies' => 'required|integer|min:1',
             'year_published' => 'nullable|digits:4|integer',
-            'description' => 'nullable|string',
             'authors' => 'nullable|array',
             'authors.*' => 'exists:authors,id',
         ]);
@@ -92,11 +96,11 @@ class BookController extends Controller
             $oldAvailable = $book->available_copies;
             $lentOut = $oldTotal - $oldAvailable; // copies currently borrowed
 
-            $newTotal = (int)$data['total_copies'];
+            $newTotal = (int) $data['total_copies'];
 
             if ($newTotal < $lentOut) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
-                    'total_copies' => "Total copies cannot be less than currently lent out copies ({$lentOut})."
+                    'total_copies' => "Total copies cannot be less than currently lent out copies ({$lentOut}).",
                 ]);
             }
 
@@ -106,20 +110,20 @@ class BookController extends Controller
             $book->update([
                 'title' => $data['title'],
                 'isbn' => $data['isbn'] ?? null,
-                'publisher' => $data['publisher'] ?? null,
+                'author' => $data['author'] ?? null,
                 'total_copies' => $newTotal,
                 'available_copies' => $newAvailable,
                 'year_published' => $data['year_published'] ?? null,
-                'description' => $data['description'] ?? null,
+
             ]);
 
             $book->authors()->sync($data['authors'] ?? []);
         });
 
-        return redirect()->route('books.show', $book)->with('success', 'Book updated.');
+        return redirect()->route('books.index', $book)->with('success', 'Book updated.');
     }
 
-    public function destroy(Book $book)
+    public function destroy(Book $book): RedirectResponse
     {
         // prevent delete if copies are currently lent out
         $lentOut = $book->total_copies - $book->available_copies;
