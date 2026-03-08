@@ -73,13 +73,13 @@
                 let lastSubmittedValue = (searchInput.value ?? '').trim();
 
                 searchInput.addEventListener('input', () => {
-                    const currentValue = (searchInput.value ?? '').trim();
-
                     if (timerId) {
                         clearTimeout(timerId);
                     }
 
                     timerId = setTimeout(() => {
+                        const currentValue = (searchInput.value ?? '').trim();
+
                         if (currentValue === lastSubmittedValue) {
                             return;
                         }

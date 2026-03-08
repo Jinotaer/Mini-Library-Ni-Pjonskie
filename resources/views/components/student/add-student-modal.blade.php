@@ -6,7 +6,7 @@
 
     <!-- Modal Content -->
     <div
-        class="relative bg-[#1a1a2e] border border-white/10 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6 animate-fade-in">
+        class="relative bg-[#1a1a2e] border border-white/10 rounded-2xl shadow-2xl w-full max-w-2xl mx-4 p-6 animate-fade-in">
         <!-- Close Button -->
         <button onclick="document.getElementById('addStudentModal').classList.add('hidden')"
             class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
