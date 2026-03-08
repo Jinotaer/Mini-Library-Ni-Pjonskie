@@ -24,6 +24,33 @@
     .nav-link {
         @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40;
     }
+    .author-checklist {
+        @apply max-h-56 overflow-y-auto rounded-xl border border-white/15 bg-[#0f1224];
+    }
+    .author-checklist-item {
+        @apply flex items-center gap-3 px-3 py-2 text-sm text-slate-200 cursor-pointer transition-colors hover:bg-white/5;
+    }
+    .author-checklist-item:has(input:checked) {
+        background-color: rgb(59 130 246 / 0.28);
+    }
+    .author-checklist-item input[type='checkbox'] {
+        @apply h-5 w-5 rounded-sm border border-slate-500 bg-[#0b1022];
+        appearance: none;
+        -webkit-appearance: none;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: 0.75rem 0.75rem;
+        transition: all 0.15s ease;
+    }
+    .author-checklist-item input[type='checkbox']:checked {
+        border-color: rgb(37 99 235 / 1);
+        background-color: rgb(37 99 235 / 1);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='white'%3E%3Cpath fill-rule='evenodd' d='M16.704 5.29a1 1 0 010 1.42l-7.2 7.2a1 1 0 01-1.414 0l-3.2-3.2a1 1 0 011.414-1.42l2.493 2.495 6.493-6.495a1 1 0 011.414 0z' clip-rule='evenodd'/%3E%3C/svg%3E");
+    }
+    .author-checklist-item input[type='checkbox']:focus-visible {
+        outline: 2px solid rgb(59 130 246 / 0.45);
+        outline-offset: 2px;
+    }
 }
 
 @layer utilities {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Author;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
 class AuthorController extends Controller
@@ -12,9 +13,23 @@ class AuthorController extends Controller
         $this->middleware('auth'); // require login
     }
 
-    public function index()
+    public function index(Request $request): View
     {
-        $authors = Author::withCount('books')->orderBy('name')->paginate(20);
+        $search = trim((string) $request->query('search', ''));
+
+        $authors = Author::query()
+            ->withCount('books')
+            ->when($search !== '', function ($query) use ($search): void {
+                $keyword = '%'.$search.'%';
+                $query->where(function ($authorQuery) use ($keyword): void {
+                    $authorQuery
+                        ->where('name', 'like', $keyword)
+                        ->orWhere('bio', 'like', $keyword);
+                });
+            })
+            ->orderBy('name')
+            ->paginate(20)
+            ->withQueryString();
 
         return view('authors.index', compact('authors'));
     }

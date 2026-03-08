@@ -59,6 +59,39 @@
         </div>
     </div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const debounceDelay = 350;
+
+            document.querySelectorAll('form[data-auto-search="true"]').forEach((form) => {
+                const searchInput = form.querySelector('input[name="search"]');
+                if (!searchInput) {
+                    return;
+                }
+
+                let timerId = null;
+                let lastSubmittedValue = (searchInput.value ?? '').trim();
+
+                searchInput.addEventListener('input', () => {
+                    const currentValue = (searchInput.value ?? '').trim();
+
+                    if (timerId) {
+                        clearTimeout(timerId);
+                    }
+
+                    timerId = setTimeout(() => {
+                        if (currentValue === lastSubmittedValue) {
+                            return;
+                        }
+
+                        lastSubmittedValue = currentValue;
+                        form.requestSubmit();
+                    }, debounceDelay);
+                });
+            });
+        });
+    </script>
+
     @stack('scripts')
 </body>
 </html>

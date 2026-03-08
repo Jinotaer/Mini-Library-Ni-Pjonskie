@@ -58,7 +58,7 @@ class Borrow extends Model
             return $paidFine + $initialFine;
         }
 
-        $overdueDays = $today->diffInDays($dueDate);
+        $overdueDays = (int) abs($today->diffInDays($dueDate));
         $remainingCount = $items->sum(function (BorrowItem $item): int {
             $remaining = $item->quantity - $item->returned_quantity;
 

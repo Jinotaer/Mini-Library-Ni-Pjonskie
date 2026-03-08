@@ -21,10 +21,32 @@ class BorrowController extends Controller
         $this->middleware('auth'); // staff only
     }
 
-    public function index(): View
+    public function index(Request $request): View
     {
+        $search = trim((string) $request->query('search', ''));
+
         return view('borrows.index', [
-            'borrows' => BorrowTransaction::with(['student', 'items.book'])->latest()->paginate(15),
+            'borrows' => BorrowTransaction::query()
+                ->with(['student', 'items.book'])
+                ->when($search !== '', function ($query) use ($search): void {
+                    $keyword = '%'.$search.'%';
+                    $query->where(function ($borrowQuery) use ($keyword): void {
+                        $borrowQuery
+                            ->whereHas('student', function ($studentQuery) use ($keyword): void {
+                                $studentQuery
+                                    ->where('student_number', 'like', $keyword)
+                                    ->orWhere('first_name', 'like', $keyword)
+                                    ->orWhere('last_name', 'like', $keyword)
+                                    ->orWhere('email', 'like', $keyword);
+                            })
+                            ->orWhereHas('items.book', function ($bookQuery) use ($keyword): void {
+                                $bookQuery->where('title', 'like', $keyword);
+                            });
+                    });
+                })
+                ->latest()
+                ->paginate(15)
+                ->withQueryString(),
             'books' => Book::orderBy('title')->get(),
             'availableBooks' => Book::where('available_copies', '>', 0)->orderBy('title')->get(),
             'students' => Student::orderBy('last_name')->get(),
@@ -197,7 +219,7 @@ class BorrowController extends Controller
         DB::transaction(function () use ($item, $transaction, $book, $returnQty) {
             $returnDate = Carbon::now();
             $dueDate = Carbon::parse($transaction->due_date);
-            $overdueDays = $returnDate->greaterThan($dueDate) ? $returnDate->diffInDays($dueDate) : 0;
+            $overdueDays = $returnDate->greaterThan($dueDate) ? (int) abs($returnDate->diffInDays($dueDate)) : 0;
             $partialFine = BorrowTransaction::FINE_PER_DAY * $overdueDays * $returnQty;
 
             $item->returned_quantity += $returnQty;
@@ -208,6 +230,19 @@ class BorrowController extends Controller
             // update book availability
             $book->available_copies += $returnQty;
             $book->save();
+
+            // Recalculate fines for all items with unreturned quantities
+            $transaction->load('items');
+            foreach ($transaction->items as $otherItem) {
+                $remaining = $otherItem->quantity - $otherItem->returned_quantity;
+                if ($remaining > 0) {
+                    $dueDate = Carbon::parse($transaction->due_date);
+                    $overdueDays = $returnDate->greaterThan($dueDate) ? (int) abs($returnDate->diffInDays($dueDate)) : 0;
+                    // Fine is for all remaining overdue books
+                    $otherItem->fine = $overdueDays * BorrowTransaction::FINE_PER_DAY * $remaining;
+                    $otherItem->save();
+                }
+            }
 
             // recompute transaction total fine
             $transaction->recomputeTotalFine();
@@ -232,7 +267,7 @@ class BorrowController extends Controller
 
         $returnDate = Carbon::now();
         $dueDate = Carbon::parse($borrow->due_date);
-        $overdueDays = $returnDate->greaterThan($dueDate) ? $returnDate->diffInDays($dueDate) : 0;
+        $overdueDays = $returnDate->greaterThan($dueDate) ? (int) abs($returnDate->diffInDays($dueDate)) : 0;
 
         DB::transaction(function () use ($borrow, $returnDate, $overdueDays) {
             foreach ($borrow->items as $item) {

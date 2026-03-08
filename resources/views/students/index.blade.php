@@ -22,15 +22,22 @@
 
         <!-- Search Bar -->
         <div class="mb-5">
-            <div class="relative max-w-md">
+            <form method="GET" action="{{ route('students.index') }}" class="relative max-w-md"
+                data-auto-search="true">
                 <svg class="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" fill="none"
                     stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                <input type="text" placeholder="Search by Name"
-                    class="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all">
-            </div>
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name, ID, email"
+                    class="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-16 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all">
+                <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    @if (request()->filled('search'))
+                        <a href="{{ route('students.index') }}"
+                            class="px-2 py-1 text-xs text-gray-300 hover:text-white transition-colors">Clear</a>
+                    @endif
+                </div>
+            </form>
         </div>
 
         <!-- Table -->

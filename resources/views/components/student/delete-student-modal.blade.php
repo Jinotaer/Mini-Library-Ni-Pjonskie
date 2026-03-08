@@ -1,10 +1,7 @@
 <!-- Delete Confirmation Modal -->
 <div id="deleteConfirmModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
     <!-- Backdrop -->
-    <div
-        class="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onclick="closeDeleteModal()"
-    ></div>
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeDeleteModal()"></div>
 
     <!-- Modal Card -->
     <div class="relative bg-[#1a1a2e] border border-white/10 rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 animate-fade">
@@ -27,18 +24,13 @@
             </p>
 
             <div class="flex items-center justify-center space-x-3">
-                <button
-                    type="button"
-                    onclick="closeDeleteModal()"
-                    class="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-all"
-                >
+                <button type="button" onclick="closeDeleteModal()"
+                    class="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-all">
                     Cancel
                 </button>
 
-                <button
-                    type="submit"
-                    class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold transition-all hover:shadow-lg hover:shadow-red-500/30"
-                >
+                <button type="submit"
+                    class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold transition-all hover:shadow-lg hover:shadow-red-500/30">
                     Delete
                 </button>
             </div>

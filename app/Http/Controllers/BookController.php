@@ -17,9 +17,28 @@ class BookController extends Controller
         $this->middleware('auth'); // require login (Breeze)
     }
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $books = Book::with('authors')->latest()->paginate(15);
+        $search = trim((string) $request->query('search', ''));
+
+        $books = Book::query()
+            ->with('authors')
+            ->when($search !== '', function ($query) use ($search): void {
+                $keyword = '%'.$search.'%';
+                $query->where(function ($bookQuery) use ($keyword): void {
+                    $bookQuery
+                        ->where('title', 'like', $keyword)
+                        ->orWhere('isbn', 'like', $keyword)
+                        ->orWhere('authors', 'like', $keyword)
+                        ->orWhere('year_published', 'like', $keyword)
+                        ->orWhereHas('authors', function ($authorQuery) use ($keyword): void {
+                            $authorQuery->where('name', 'like', $keyword);
+                        });
+                });
+            })
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
         $authors = Author::orderBy('name')->get();
 
         return view('books.index', compact('books', 'authors'));
