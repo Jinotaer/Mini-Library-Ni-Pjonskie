@@ -23,66 +23,41 @@
         <form action="{{ route('students.store') }}" method="POST" class="space-y-4">
             @csrf
 
-                <div class="flex flex-row gap-7">
-                    <div class="flex-1">
-                        <!-- Student ID -->
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-300 mb-1.5">Student ID</label>
-                            <input type="text" name="student_number" placeholder="e.g. 109820230001"
-                                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all">
-                        </div>
-
-                        <!-- Course -->
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-300 mb-1.5">Course</label>
-                            <input type="text" name="course" placeholder="e.g. Bachelor of Computer Science"
-                                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all">
-                        </div>
-
-                        <!-- Email -->
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-300 mb-1.5">Email</label>
-                            <input type="email" name="email" placeholder="e.g. student@buksu.edu.ph"
-                                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all">
-                        </div>
-                    </div>
-
-                    <div class="flex-1">
-
-                    <!-- Course -->
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-300 mb-1.5">Course</label>
-                        <input type="text" name="course" placeholder="e.g. Bachelor of Computer Science"
-                            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all">
-                    </div>
-                </div>
-
+            <!-- Row 1: Student ID, Course, First Name -->
+            <div class="grid grid-cols-3 gap-4">
                 <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1.5">Student ID</label>
+                    <input type="text" name="student_number" placeholder="e.g. 109820230001"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1.5">Course</label>
+                    <input type="text" name="course" placeholder="e.g. BSCS"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1.5">First Name</label>
+                    <input type="text" name="first_name" placeholder="e.g. Juan"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all">
+                </div>
+            </div>
 
-                    <!-- First Name -->
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-300 mb-1.5">First Name</label>
-                        <input type="text" name="first_name" placeholder="e.g. Juan"
-                            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all">
-                    </div>
-
-                    <!-- Last Name -->
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-300 mb-1.5">Last Name</label>
-                        <input type="text" name="last_name" placeholder="e.g. Dela Cruz"
-                            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all">
-                    </div>
-
-
-                        <!-- Contact -->
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-300 mb-1.5">Contact</label>
-                            <input type="text" name="contact" placeholder="e.g. 09123456789"
-                                class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all">
-                        </div>
-
-                    </div>
-
+            <!-- Row 2: Last Name, Email, Contact -->
+            <div class="grid grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1.5">Last Name</label>
+                    <input type="text" name="last_name" placeholder="e.g. Dela Cruz"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1.5">Email</label>
+                    <input type="email" name="email" placeholder="e.g. student@buksu.edu.ph"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1.5">Contact</label>
+                    <input type="text" name="contact" placeholder="e.g. 09123456789"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all">
                 </div>
             </div>
 
