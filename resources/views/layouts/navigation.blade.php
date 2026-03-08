@@ -3,7 +3,7 @@
      <!-- Logo Section -->
      <div class="p-6 flex items-center space-x-3 border-b border-white/5">
          <div
-             class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex-shrink-0 flex items-center justify-center shadow-lg">
+             class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex-shrink-0 flex items-center justify-center">
              <span class="text-white font-bold text-sm">BU</span>
          </div>
          <div>
@@ -86,7 +86,7 @@
 
          @foreach ($navItems as $item)
              <a href="{{ $item['href'] }}"
-                 class="nav-link flex items-center space-x-3 p-3 rounded-xl transition-all {{ $currentPage === $item['key'] ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 font-semibold' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
+                 class="nav-link flex items-center space-x-3 p-3 rounded-xl transition-all {{ $currentPage === $item['key'] ? 'bg-indigo-600 text-white font-semibold' : 'text-gray-400 hover:bg-white/5 hover:text-white' }}">
                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                      @if (is_array($item['icon']))
                          @foreach ($item['icon'] as $path)
