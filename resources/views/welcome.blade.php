@@ -83,8 +83,8 @@
                 </div>
             </div>
 
-            <div class="relative animate-fade-in" style="animation-delay: 0.1s">
-                <div class="glass-card relative overflow-hidden rounded-3xl p-8">
+            <div class="relative -my-8 animate-fade-in" style="animation-delay: 0.1s">
+                <div class="glass-card relative rounded-3xl p-8">
                     <div class="absolute right-6 top-6 flex items-center gap-2 text-xs text-emerald-300">
                         <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
                         Live status

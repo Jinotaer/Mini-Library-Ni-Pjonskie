@@ -137,20 +137,10 @@
                                 @php
                                     $isReturned = $recentBorrow->returned_at !== null;
                                     $student = $recentBorrow->student;
-                                    $studentInitial = $student?->first_name
-                                        ? strtoupper(substr($student->first_name, 0, 1))
-                                        : 'N';
                                 @endphp
                                 <tr class="hover:bg-white/5 transition-colors">
-                                    <td class="py-3.5 px-4 flex items-center space-x-3 text-sm text-white">
-                                        <div
-                                            class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
-                                            <span class="text-white font-bold text-sm">{{ $studentInitial }}</span>
-                                        </div>
-                                        <div>
-                                            <p>{{ $student?->first_name }} {{ $student?->last_name }}</p>
-                                            <p class="text-gray-400 text-xs">{{ $student?->course ?? '—' }}</p>
-                                        </div>
+                                    <td class="py-3.5 px-4 text-sm text-white">
+                                        <p>{{ $student?->first_name }} {{ $student?->last_name }}</p>
                                     </td>
                                     <td class="py-3.5 px-4 text-sm text-white">
                                         @forelse ($recentBorrow->items as $item)

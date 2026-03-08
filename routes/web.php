@@ -32,6 +32,7 @@ Route::get('/dashboard', function () {
         ->count();
 
     $recentBorrows = \App\Models\BorrowTransaction::with(['student', 'items.book'])
+        ->whereNull('returned_at')
         ->latest()
         ->limit(5)
         ->get();

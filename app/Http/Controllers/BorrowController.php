@@ -49,7 +49,7 @@ class BorrowController extends Controller
                 'user_id' => auth()->id(),
                 'borrow_date' => $data['borrow_date'],
                 'due_date' => $data['due_date'],
-                'total_fine' => 0,
+                'total_fine' => (float) ($data['total_fine'] ?? 0),
             ]);
 
             foreach ($data['books'] as $line) {

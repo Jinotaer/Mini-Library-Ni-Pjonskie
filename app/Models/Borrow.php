@@ -45,16 +45,17 @@ class Borrow extends Model
     {
         $items = $this->relationLoaded('items') ? $this->items : $this->items()->get();
         $paidFine = (float) $items->sum('fine');
+        $initialFine = (float) $this->total_fine;
 
         if ($this->returned_at !== null) {
-            return $paidFine;
+            return $paidFine + $initialFine;
         }
 
         $today = Carbon::now();
         $dueDate = Carbon::parse($this->due_date);
 
         if ($today->lessThanOrEqualTo($dueDate)) {
-            return $paidFine;
+            return $paidFine + $initialFine;
         }
 
         $overdueDays = $today->diffInDays($dueDate);
@@ -64,6 +65,6 @@ class Borrow extends Model
             return $remaining > 0 ? $remaining : 0;
         });
 
-        return $paidFine + ($overdueDays * self::FINE_PER_DAY * $remainingCount);
+        return $paidFine + $initialFine + ($overdueDays * self::FINE_PER_DAY * $remainingCount);
     }
 }

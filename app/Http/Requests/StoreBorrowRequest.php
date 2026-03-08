@@ -25,6 +25,7 @@ class StoreBorrowRequest extends FormRequest
             'student_id' => 'required|exists:students,id',
             'borrow_date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:borrow_date',
+            'total_fine' => 'nullable|numeric|min:0',
             'books' => 'required|array|min:1',
             'books.*.book_id' => 'required|exists:books,id',
             'books.*.quantity' => 'required|integer|min:1',

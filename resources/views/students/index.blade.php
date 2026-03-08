@@ -57,19 +57,19 @@
                         <tr class="hover:bg-white/5 transition-colors group animate-slide-in"
                             style="animation-delay: {{ 0.15 + $index * 0.05 }}s; opacity: 0;">
                             <td class="py-3.5 px-4">
-                                <span class="text-gray-400 text-sm font-mono">{{ $student['student_number'] }}</span>
+                                <span class="text-gray-400 text-sm font-mono">{{ $student->student_number }}</span>
                             </td>
                             <td class="py-3.5 px-4">
-                                <span class="text-white text-sm font-medium">{{ $student['email'] }}</span>
+                                <span class="text-white text-sm font-medium">{{ $student->email ?? '-' }}</span>
                             </td>
                             <td class="py-3.5 px-4">
-                                <span class="text-white text-sm font-medium">{{ $student['full_name'] }}</span>
+                                <span class="text-white text-sm font-medium">{{ $student->full_name }}</span>
                             </td>
                             <td class="py-3.5 px-4">
-                                <span class="text-white text-sm font-medium">{{ $student['course'] }}</span>
+                                <span class="text-white text-sm font-medium">{{ $student->course }}</span>
                             </td>
                             <td class="py-3.5 px-4">
-                                <span class="text-gray-300 text-sm">{{ $student['contact'] }}</span>
+                                <span class="text-gray-300 text-sm">{{ $student->contact }}</span>
                             </td>
                             <td class="py-3.5 px-4">
                                 <div class="flex items-center justify-end space-x-2">

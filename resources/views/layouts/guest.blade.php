@@ -25,7 +25,7 @@
             class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.04)_1px,transparent_0)] [background-size:22px_22px]">
         </div>
 
-        <div class="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-10">
+        <div class="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-10 overflow-auto">
             <a href="/" class="mb-8 flex items-center gap-3">
                 <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500/20 text-indigo-300">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -8,7 +8,7 @@
 
     <!-- Modal Card -->
     <div class="relative bg-[#1a1a2e] border border-white/10 rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 animate-fade">
-        <form id="deleteStudentForm" method="POST" action="{{ route('students.destroy', ['student' => $student->id]) }}" class="text-center">
+        <form id="deleteStudentForm" method="POST" action="" class="text-center">
             @csrf
             @method('DELETE')
 

@@ -27,7 +27,8 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-1.5">Student</label>
                     <select name="student_id"
-                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all">
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all" required>
+                        <option value="" disabled selected class="bg-[#1a1a2e] text-white">Select a student</option>
                         @foreach ($students as $student)
                             <option value="{{ $student->id }}" class="bg-[#1a1a2e] text-white">
                                 {{ $student->full_name }} ({{ $student->student_number }})
@@ -38,13 +39,19 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-1.5">Borrow Date</label>
-                    <input type="date" name="borrow_date"
-                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all">
+                    <input type="date" name="borrow_date" value="{{ date('Y-m-d') }}"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all" required>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-1.5">Due Date</label>
-                    <input type="date" name="due_date"
+                    <input type="date" name="due_date" value="{{ date('Y-m-d', strtotime('+14 days')) }}"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all" required>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1.5">Initial Fine (₱)</label>
+                    <input type="number" name="total_fine" min="0" value="0" step="0.01"
                         class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all">
                 </div>
             </div>
