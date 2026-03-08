@@ -21,10 +21,32 @@ class BorrowController extends Controller
         $this->middleware('auth'); // staff only
     }
 
-    public function index(): View
+    public function index(Request $request): View
     {
+        $search = trim((string) $request->query('search', ''));
+
         return view('borrows.index', [
-            'borrows' => BorrowTransaction::with(['student', 'items.book'])->latest()->paginate(15),
+            'borrows' => BorrowTransaction::query()
+                ->with(['student', 'items.book'])
+                ->when($search !== '', function ($query) use ($search): void {
+                    $keyword = '%'.$search.'%';
+                    $query->where(function ($borrowQuery) use ($keyword): void {
+                        $borrowQuery
+                            ->whereHas('student', function ($studentQuery) use ($keyword): void {
+                                $studentQuery
+                                    ->where('student_number', 'like', $keyword)
+                                    ->orWhere('first_name', 'like', $keyword)
+                                    ->orWhere('last_name', 'like', $keyword)
+                                    ->orWhere('email', 'like', $keyword);
+                            })
+                            ->orWhereHas('items.book', function ($bookQuery) use ($keyword): void {
+                                $bookQuery->where('title', 'like', $keyword);
+                            });
+                    });
+                })
+                ->latest()
+                ->paginate(15)
+                ->withQueryString(),
             'books' => Book::orderBy('title')->get(),
             'availableBooks' => Book::where('available_copies', '>', 0)->orderBy('title')->get(),
             'students' => Student::orderBy('last_name')->get(),

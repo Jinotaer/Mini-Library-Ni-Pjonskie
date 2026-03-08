@@ -14,9 +14,27 @@ class StudentController extends Controller
         $this->middleware('auth'); // only staff manage students
     }
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $students = Student::withCount('borrowTransactions')->latest()->paginate(20);
+        $search = trim((string) $request->query('search', ''));
+
+        $students = Student::query()
+            ->withCount('borrowTransactions')
+            ->when($search !== '', function ($query) use ($search): void {
+                $keyword = '%'.$search.'%';
+                $query->where(function ($studentQuery) use ($keyword): void {
+                    $studentQuery
+                        ->where('student_number', 'like', $keyword)
+                        ->orWhere('first_name', 'like', $keyword)
+                        ->orWhere('last_name', 'like', $keyword)
+                        ->orWhere('email', 'like', $keyword)
+                        ->orWhere('course', 'like', $keyword)
+                        ->orWhere('contact', 'like', $keyword);
+                });
+            })
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
 
         return view('students.index', compact('students'));
     }
