@@ -10,6 +10,7 @@ use App\Models\BorrowTransaction;
 use App\Models\Student;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -220,31 +221,18 @@ class BorrowController extends Controller
             $returnDate = Carbon::now();
             $dueDate = Carbon::parse($transaction->due_date);
             $overdueDays = $returnDate->greaterThan($dueDate) ? (int) abs($returnDate->diffInDays($dueDate)) : 0;
-            $partialFine = BorrowTransaction::FINE_PER_DAY * $overdueDays * $returnQty;
+            $paidFine = BorrowTransaction::FINE_PER_DAY * $overdueDays * $returnQty;
 
             $item->returned_quantity += $returnQty;
             $item->last_returned_at = $returnDate;
-            $item->fine += $partialFine;
+            $item->fine += $paidFine;
             $item->save();
 
             // update book availability
             $book->available_copies += $returnQty;
             $book->save();
 
-            // Recalculate fines for all items with unreturned quantities
-            $transaction->load('items');
-            foreach ($transaction->items as $otherItem) {
-                $remaining = $otherItem->quantity - $otherItem->returned_quantity;
-                if ($remaining > 0) {
-                    $dueDate = Carbon::parse($transaction->due_date);
-                    $overdueDays = $returnDate->greaterThan($dueDate) ? (int) abs($returnDate->diffInDays($dueDate)) : 0;
-                    // Fine is for all remaining overdue books
-                    $otherItem->fine = $overdueDays * BorrowTransaction::FINE_PER_DAY * $remaining;
-                    $otherItem->save();
-                }
-            }
-
-            // recompute transaction total fine
+            // recompute transaction total fine (sum of paid fines)
             $transaction->recomputeTotalFine();
 
             // if all items fully returned -> mark returned_at
@@ -259,6 +247,20 @@ class BorrowController extends Controller
         });
 
         return redirect()->back()->with('success', 'Return processed.');
+    }
+
+    public function fines(): JsonResponse
+    {
+        $activeBorrows = BorrowTransaction::with('items')
+            ->whereNull('returned_at')
+            ->get();
+
+        $fines = [];
+        foreach ($activeBorrows as $borrow) {
+            $fines[$borrow->id] = round($borrow->current_fine, 2);
+        }
+
+        return response()->json($fines);
     }
 
     public function returnAll(BorrowTransaction $borrow): RedirectResponse
@@ -276,11 +278,11 @@ class BorrowController extends Controller
                     continue;
                 }
 
-                $partialFine = BorrowTransaction::FINE_PER_DAY * $overdueDays * $remaining;
+                $paidFine = BorrowTransaction::FINE_PER_DAY * $overdueDays * $remaining;
 
                 $item->returned_quantity += $remaining;
                 $item->last_returned_at = $returnDate;
-                $item->fine += $partialFine;
+                $item->fine += $paidFine;
                 $item->save();
 
                 $book = $item->book;
@@ -291,7 +293,6 @@ class BorrowController extends Controller
             }
 
             $borrow->recomputeTotalFine();
-
             $borrow->returned_at = $returnDate;
             $borrow->save();
         });

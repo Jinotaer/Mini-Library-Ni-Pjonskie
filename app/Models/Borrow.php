@@ -43,21 +43,21 @@ class Borrow extends Model
 
     public function getCurrentFineAttribute(): float
     {
-        $items = $this->relationLoaded('items') ? $this->items : $this->items()->get();
-        $paidFine = (float) $items->sum('fine');
-        $initialFine = (float) $this->total_fine;
-
+        // Returned borrows: show the total fines paid
         if ($this->returned_at !== null) {
-            return $paidFine + $initialFine;
+            return (float) $this->total_fine;
         }
 
         $today = Carbon::now();
         $dueDate = Carbon::parse($this->due_date);
 
+        // Not yet overdue
         if ($today->lessThanOrEqualTo($dueDate)) {
-            return $paidFine + $initialFine;
+            return 0;
         }
 
+        // Overdue: dynamic fine for unreturned books only
+        $items = $this->relationLoaded('items') ? $this->items : $this->items()->get();
         $overdueDays = (int) abs($today->diffInDays($dueDate));
         $remainingCount = $items->sum(function (BorrowItem $item): int {
             $remaining = $item->quantity - $item->returned_quantity;
@@ -65,6 +65,6 @@ class Borrow extends Model
             return $remaining > 0 ? $remaining : 0;
         });
 
-        return $paidFine + $initialFine + ($overdueDays * self::FINE_PER_DAY * $remainingCount);
+        return $overdueDays * self::FINE_PER_DAY * $remainingCount;
     }
 }

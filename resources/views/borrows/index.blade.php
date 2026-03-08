@@ -62,18 +62,20 @@
                     @forelse ($borrows as $borrow)
                         @php
                             $studentName = $borrow->student?->full_name ?? 'Unknown Student';
-                            $isReturned = ! is_null($borrow->returned_at);
-                            $isOverdue = ! $isReturned && now()->greaterThan($borrow->due_date);
-                            $borrowItems = $borrow->items->map(function ($item) {
-                                return [
-                                    'book_id' => $item->book_id,
-                                    'quantity' => $item->quantity,
-                                ];
-                            })->values();
+                            $isReturned = !is_null($borrow->returned_at);
+                            $isOverdue = !$isReturned && now()->greaterThan($borrow->due_date);
+                            $borrowItems = $borrow->items
+                                ->map(function ($item) {
+                                    return [
+                                        'book_id' => $item->book_id,
+                                        'quantity' => $item->quantity,
+                                    ];
+                                })
+                                ->values();
                             $borrowDate = \Illuminate\Support\Carbon::parse($borrow->borrow_date)->toDateString();
                             $dueDate = \Illuminate\Support\Carbon::parse($borrow->due_date)->toDateString();
                             $hasReturns = $borrow->items->where('returned_quantity', '>', 0)->isNotEmpty();
-                            $canEdit = ! $isReturned && ! $hasReturns;
+                            $canEdit = !$isReturned && !$hasReturns;
                             $returnItems = $borrow->items
                                 ->map(function ($item) {
                                     $remaining = $item->quantity - $item->returned_quantity;
@@ -105,24 +107,28 @@
                             </td>
                             <td class="py-3.5 px-4 text-sm text-white">{{ $borrow->borrow_date }}</td>
                             <td class="py-3.5 px-4 text-sm text-white">{{ $borrow->due_date }}</td>
-                            <td class="py-3.5 px-4 text-sm text-white">₱{{ number_format($borrow->current_fine, 2) }}</td>
+                            <td class="py-3.5 px-4 text-sm text-white" data-borrow-fine="{{ $borrow->id }}">₱{{ number_format($borrow->current_fine, 2) }}
+                            </td>
                             <td class="py-3.5 px-4 text-sm">
                                 @if ($isReturned)
-                                    <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-300">
+                                    <span
+                                        class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-300">
                                         Returned
                                     </span>
                                 @elseif ($isOverdue)
-                                    <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/15 text-red-300">
+                                    <span
+                                        class="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/15 text-red-300">
                                         Overdue
                                     </span>
                                 @else
-                                    <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-500/15 text-indigo-300">
+                                    <span
+                                        class="px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-500/15 text-indigo-300">
                                         Borrowed
                                     </span>
                                 @endif
                             </td>
                             <td class="py-3.5 px-4 text-sm">
-                                @if (! $isReturned)
+                                @if (!$isReturned)
                                     <div class="flex items-center gap-2">
                                         @if ($canEdit)
                                             <button type="button"
@@ -138,8 +144,7 @@
                                             </button>
                                         @endif
                                         @if ($returnItems->isNotEmpty())
-                                            <button type="button"
-                                                data-return-items='@json($returnItems)'
+                                            <button type="button" data-return-items='@json($returnItems)'
                                                 data-return-all-url="{{ route('borrows.return-all', $borrow) }}"
                                                 onclick="openReturnBorrowModal(this)"
                                                 class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 transition-all">
@@ -259,9 +264,9 @@
 
             const studentField = document.getElementById('edit_borrow_student');
             if (studentField) {
-                studentField.value = studentName && studentNumber
-                    ? `${studentName} (${studentNumber})`
-                    : studentName;
+                studentField.value = studentName && studentNumber ?
+                    `${studentName} (${studentNumber})` :
+                    studentName;
             }
 
             const borrowDateField = document.getElementById('edit_borrow_date');
@@ -408,6 +413,34 @@
                 });
             }
         }
+
+        // Auto-refresh fines every 30 seconds
+        (function () {
+            const finesUrl = @json(route('borrows.fines'));
+
+            async function refreshFines() {
+                try {
+                    const res = await fetch(finesUrl, {
+                        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    if (!res.ok) return;
+                    const fines = await res.json();
+                    document.querySelectorAll('[data-borrow-fine]').forEach(cell => {
+                        const id = cell.dataset.borrowFine;
+                        if (fines[id] !== undefined) {
+                            const formatted = '₱' + Number(fines[id]).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            if (cell.textContent.trim() !== formatted) {
+                                cell.textContent = formatted;
+                                cell.classList.add('text-yellow-300');
+                                setTimeout(() => cell.classList.remove('text-yellow-300'), 2000);
+                            }
+                        }
+                    });
+                } catch (e) {}
+            }
+
+            setInterval(refreshFines, 30000);
+        })();
     </script>
     <script>
         // Student search/typeahead for Add Borrow modal

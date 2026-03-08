@@ -56,6 +56,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('students', StudentController::class);
     Route::resource('authors', AuthorController::class);
     Route::resource('books', BookController::class);
+    Route::get('borrows/fines', [BorrowController::class, 'fines'])->name('borrows.fines');
     Route::resource('borrows', BorrowController::class);
     Route::post('borrows/return-item/{borrowItem}', [BorrowController::class, 'returnItem'])->name('borrows.return-item');
     Route::post('borrows/return-all/{borrow}', [BorrowController::class, 'returnAll'])->name('borrows.return-all');
