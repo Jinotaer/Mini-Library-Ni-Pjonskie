@@ -147,11 +147,11 @@
             document.getElementById('edit_book_total_copies').value = button.dataset.bookTotalCopies ?? '';
             document.getElementById('edit_book_year_published').value = button.dataset.bookYearPublished ?? '';
 
-            const authorSelect = document.getElementById('edit_book_authors');
             const authorIds = JSON.parse(button.dataset.bookAuthorIds ?? '[]');
-            if (authorSelect) {
-                Array.from(authorSelect.options).forEach((option) => {
-                    option.selected = authorIds.includes(Number(option.value));
+            const authorCheckboxes = document.querySelectorAll('#editBookModal .edit-book-author-checkbox');
+            if (authorCheckboxes.length > 0) {
+                authorCheckboxes.forEach((checkbox) => {
+                    checkbox.checked = authorIds.includes(Number(checkbox.value));
                 });
             }
             document.getElementById('editBookModal').classList.remove('hidden');

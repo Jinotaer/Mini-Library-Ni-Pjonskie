@@ -66,18 +66,18 @@
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-gray-300 mb-1.5">Authors</label>
 
-                    <select name="authors[]" multiple
-                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all">
+                    <div class="author-checklist custom-scrollbar">
                         @foreach($authors as $author)
-                            <option value="{{ $author->id }}" class="bg-[#1a1a2e] text-white"
-                                @selected(collect(old('authors', []))->contains($author->id))>
-                                {{ $author->name }}
-                            </option>
+                            <label class="author-checklist-item">
+                                <input type="checkbox" name="authors[]" value="{{ $author->id }}"
+                                    @checked(collect(old('authors', []))->contains($author->id))>
+                                <span>{{ $author->name }}</span>
+                            </label>
                         @endforeach
-                    </select>
+                    </div>
 
                     <p class="text-xs text-gray-400 mt-1">
-                        Hold CTRL (Windows) or CMD (Mac) to select multiple authors.
+                        Select one or more authors.
                     </p>
                 </div>
             </div>
