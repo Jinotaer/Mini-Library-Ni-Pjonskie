@@ -24,17 +24,24 @@
             @csrf
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+                <div class="relative">
                     <label class="block text-sm font-medium text-gray-300 mb-1.5">Student</label>
-                    <select name="student_id"
-                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all" required>
-                        <option value="" disabled selected class="bg-[#1a1a2e] text-white">Select a student</option>
-                        @foreach ($students as $student)
-                            <option value="{{ $student->id }}" class="bg-[#1a1a2e] text-white">
-                                {{ $student->full_name }} ({{ $student->student_number }})
-                            </option>
-                        @endforeach
-                    </select>
+                    <input type="text" id="add_borrow_student_search" placeholder="Type student name or ID to search"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all" autocomplete="off">
+                    <input type="hidden" name="student_id" id="add_borrow_student_id" required>
+
+                    <div id="addStudentDropdown" class="hidden absolute left-0 w-full mt-2 rounded-lg shadow-2xl"
+                        style="background-color:#0b1220; border:1px solid rgba(255,255,255,0.06); max-height:240px; overflow-y:auto; z-index:9999; backdrop-filter:none; -webkit-backdrop-filter:none;">
+                        <ul style="margin:0; padding:0; list-style:none;">
+                            @foreach ($students as $student)
+                                <li data-id="{{ $student->id }}" data-name="{{ $student->full_name }}" data-number="{{ $student->student_number }}"
+                                    style="padding:12px 16px; cursor:pointer; background-color: #0b1220; color:#ffffff; border-bottom:1px solid rgba(255,255,255,0.04);">
+                                    <div style="font-size:0.95rem; line-height:1.1">{{ $student->full_name }}</div>
+                                    <div style="font-size:0.75rem; color:rgba(255,255,255,0.65); margin-top:4px">{{ $student->student_number }}</div>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
                 </div>
 
                 <div>
