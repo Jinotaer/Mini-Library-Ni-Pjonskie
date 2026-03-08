@@ -181,6 +181,14 @@
 
         if (addBorrowBtn && addBorrowModal) {
             addBorrowBtn.addEventListener('click', () => {
+                // reset student search fields when opening modal
+                const studentSearch = document.getElementById('add_borrow_student_search');
+                const studentHidden = document.getElementById('add_borrow_student_id');
+                const studentDropdown = document.getElementById('addStudentDropdown');
+                if (studentSearch) studentSearch.value = '';
+                if (studentHidden) studentHidden.value = '';
+                if (studentDropdown) studentDropdown.classList.add('hidden');
+
                 addBorrowModal.classList.remove('hidden');
             });
         }
@@ -400,5 +408,63 @@
                 });
             }
         }
+    </script>
+    <script>
+        // Student search/typeahead for Add Borrow modal
+        (function () {
+            const searchInput = document.getElementById('add_borrow_student_search');
+            const dropdown = document.getElementById('addStudentDropdown');
+            const hiddenInput = document.getElementById('add_borrow_student_id');
+
+            if (!searchInput || !dropdown || !hiddenInput) return;
+
+            const items = Array.from(dropdown.querySelectorAll('li'));
+
+            const filter = (q) => {
+                const term = q.trim().toLowerCase();
+                let visible = 0;
+                items.forEach((li) => {
+                    const text = li.textContent.trim().toLowerCase();
+                    if (!term || text.includes(term)) {
+                        li.classList.remove('hidden');
+                        visible += 1;
+                    } else {
+                        li.classList.add('hidden');
+                    }
+                });
+
+                if (visible > 0) {
+                    dropdown.classList.remove('hidden');
+                } else {
+                    dropdown.classList.add('hidden');
+                }
+            };
+
+            searchInput.addEventListener('input', (e) => {
+                hiddenInput.value = '';
+                filter(e.target.value);
+            });
+
+            items.forEach((li) => {
+                li.addEventListener('click', () => {
+                    const id = li.dataset.id;
+                    const name = li.dataset.name;
+                    const number = li.dataset.number;
+                    hiddenInput.value = id;
+                    searchInput.value = `${name} (${number})`;
+                    dropdown.classList.add('hidden');
+                });
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!dropdown.contains(e.target) && e.target !== searchInput) {
+                    dropdown.classList.add('hidden');
+                }
+            });
+
+            // show all on focus
+            searchInput.addEventListener('focus', () => filter(searchInput.value));
+        })();
     </script>
 </x-layouts.layout>
